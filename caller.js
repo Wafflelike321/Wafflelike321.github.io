@@ -68,6 +68,32 @@ navigator.mediaDevices.getUserMedia({
     });
 */
 
+start();
+// ---------------------------------------------------------------------------------
+function startDesktop() {
+    if (window.stream) {
+        window.stream.getTracks().forEach(function(track) {
+          track.stop();
+        });
+    }
+
+    getScreenId((error, sourceId, screenConstraints) => {
+    if (error === 'not-installed') return alert('The extension is not installed');
+    if (error === 'permission-denied') return alert('Permission is denied.');
+    if (error === 'not-chrome') return alert('Please use chrome.');
+
+    navigator.mediaDevices.getUserMedia(screenConstraints)
+        .then(stream => {
+            window.stream = stream;
+            vid1.srcObject = stream;
+            localstream = stream;
+        })
+        .catch(err => {
+            console.log(err);
+        });
+    });
+}
+/*
 getScreenId(function (error, sourceId, screen_constraints) {
    
     navigator.mediaDevices.getUserMedia(screen_constraints)
@@ -80,7 +106,7 @@ getScreenId(function (error, sourceId, screen_constraints) {
         console.log(err);
     });
 });
-
+*/
 function cbGotRemoteStream(evt) {
     trace('## Received remote stream try');
     if (vid2.srcObject !== evt.streams[0]) {
