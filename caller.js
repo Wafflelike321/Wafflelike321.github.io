@@ -69,12 +69,7 @@ navigator.mediaDevices.getUserMedia({
 */
 
 // ---------------------------------------------------------------------------------
-function startDesktop() {
-    if (window.stream) {
-        window.stream.getTracks().forEach(function(track) {
-          track.stop();
-        });
-    }
+
 
     getScreenId((error, sourceId, screenConstraints) => {
     if (error === 'not-installed') return alert('The extension is not installed');
@@ -91,7 +86,7 @@ function startDesktop() {
             console.log(err);
         });
     });
-}
+
 /*
 getScreenId(function (error, sourceId, screen_constraints) {
    
