@@ -69,14 +69,16 @@ navigator.mediaDevices.getUserMedia({
 */
 
 getScreenId(function (error, sourceId, screen_constraints) {
-    // error    == null || 'permission-denied' || 'not-installed' || 'installed-disabled' || 'not-chrome'
-    // sourceId == null || 'string' || 'firefox'
+   
     navigator.mediaDevices.getUserMedia(screen_constraints)
     .then(stream => {
         window.stream = stream;
         vid1.srcObject = stream;
         localstream = stream;
     })
+    .catch(err => {
+        console.log(err);
+    });
 });
 
 function cbGotRemoteStream(evt) {
