@@ -57,7 +57,7 @@ function cbGotStream(stream) {
     localstream = stream;
     vid1.srcObject = stream;
 }
-
+/*
 navigator.mediaDevices.getUserMedia({
     audio: true,
     video: true
@@ -66,6 +66,18 @@ navigator.mediaDevices.getUserMedia({
     .catch(function (e) {
         alert('getUserMedia() error: ' + e);
     });
+*/
+
+getScreenId(function (error, sourceId, screen_constraints) {
+    // error    == null || 'permission-denied' || 'not-installed' || 'installed-disabled' || 'not-chrome'
+    // sourceId == null || 'string' || 'firefox'
+    navigator.mediaDevices.getUserMedia(screen_constraints)
+    .then(stream => {
+        window.stream = stream;
+        vid1.srcObject = stream;
+        localstream = stream;
+    })
+});
 
 function cbGotRemoteStream(evt) {
     trace('## Received remote stream try');
@@ -74,6 +86,7 @@ function cbGotRemoteStream(evt) {
         trace('## Received remote stream success');
     }
 }
+
 
 function onStart() {
     var cfg = {
