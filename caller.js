@@ -68,7 +68,6 @@ navigator.mediaDevices.getUserMedia({
     });
 */
 
-start();
 // ---------------------------------------------------------------------------------
 function startDesktop() {
     if (window.stream) {
