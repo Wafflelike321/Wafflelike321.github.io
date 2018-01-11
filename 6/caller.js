@@ -6,58 +6,18 @@ function trace(arg) {
 }
 
 // UI Element Value
-var output_offerDesc = document.querySelector('textarea#output_offerDesc');
-var input_answerDesc = document.querySelector('textarea#input_answerDesc');
-
 var vid1 = document.querySelector('#vid1');
 var vid2 = document.querySelector('#vid2');
-
 var btn_start = document.querySelector('#btn_start');
-var btn_finalOffer = document.querySelector('#btn_finalOffer');
-var btn_receiveAnswer = document.querySelector('#btn_receiveAnswer');
+var roomId = document.querySelector('#room_id');
 
 btn_start.addEventListener('click', onStart);
-btn_finalOffer.addEventListener('click', onOffer);
-btn_receiveAnswer.addEventListener('click', onReceiveAnswer);
-
-var snapshotButton = document.querySelector('button#snapshot');
-var toggleMirrorButton = document.querySelector('button#toggle-mirror');
-var filterSelect = document.querySelector('select#filter');
-
-var toggleDesButton = document.querySelector('button#toggle-Des');
-
-
-var canvas = window.canvas = document.querySelector('canvas');
-canvas.width = 480;
-canvas.height = 360;
-
-snapshotButton.onclick = function() {
-    canvas.className = filterSelect.value;
-    canvas.getContext('2d').drawImage(vid1, 0, 0, canvas.width, canvas.height);
-};
-
-filterSelect.onchange = function() {
-    vid1.className = filterSelect.value;
-};
-
-var vidClassName = '';
-toggleMirrorButton.onclick = function() {
-    if (!vidClassName)
-        vidClassName = 'mirror';
-    else 
-        vidClassName = '';
-    vid1.className = vidClassName;
-};
-
-toggleDesButton.onclick = function() {
-    
-};
-
 // ---------------------------------------------------------------------------------
-
 // Value
 var local_peer = null;
 var localstream = null;
+var SIGNAL_SERVER_HTTP_URL = 'http://localhost:3001';
+var SIGNAL_SERVER_WS_URL = 'ws://localhost:3001';
 // ---------------------------------------------------------------------------------
 function cbGotStream(stream) {
     trace('Received local stream');
@@ -82,13 +42,38 @@ function cbGotRemoteStream(evt) {
     }
 }
 
+function onWsMessage(messageEvt) {
+    console.info(messageEvt);
+
+    var obj = JSON.parse(messageEvt.data);
+    if (obj.code == '99') {
+        alert(obj.msg);
+    }
+    else if (obj.code == '01') {
+        // start
+        console.info('start in onWsMessage');
+        onOffer();
+    }
+    else if (obj.code == '00') {
+        receiveAnswer(obj.msg);
+    }    
+    else {
+        alert('unknown error in onWsMessage');
+    }    
+}
+
 function onStart() {
+
+    var url = SIGNAL_SERVER_WS_URL + '/room/' + roomId.value;
+    g_mc_ws_component.connect(url, onWsMessage);
+
     var cfg = {
         iceTransportPolicy: "all", // set to "relay" to force TURN.
         iceServers: [
         ]
     };
     // cfg.iceServers.push({urls: "stun:stun.l.google.com:19302"});
+
     local_peer = new RTCPeerConnection(cfg);
     local_peer.onicecandidate = function (evt) {
         cbIceCandidate(local_peer, evt);
@@ -126,17 +111,10 @@ function onOffer() {
 function receiveAnswer(sdpString) {
     trace('receiveAnswer');
     var descObject = {
-        type: 'pranswer',
+        type: 'answer',
         sdp: sdpString
     };
     local_peer.setRemoteDescription(descObject);
-}
-
-function onReceiveAnswer() {
-    var sdpString = input_answerDesc.value;
-    receiveAnswer(sdpString);
-
-    trace('## receiveAnswer success');
 }
 
 function cbCreateOfferError(error) {
@@ -180,5 +158,26 @@ function cbCheckIceCandidateAdded(candidateObject) {
 
 function cbCheckIceCandidateCompleted(descObject) {
     trace('cbCheckIceCandidateCompleted');
-    output_offerDesc.value = descObject.sdp;
+    g_mc_ws_component.sendMessage(descObject.sdp);
 }
+
+
+var app = new Vue({
+    el: '#app',
+    data: {
+        rooms : [
+        ]
+    },
+    methods: {
+      onClickRoom : function (id) {
+        window.roomId.value = id;
+      },
+      onUpdateRoomList : function(event) {
+          this.$http.get(window.SIGNAL_SERVER_HTTP_URL + '/roomlist').then(response => {
+            this.rooms = response.body;
+          }, response => {
+            alert(response);
+          });          
+      }
+    }
+  })
